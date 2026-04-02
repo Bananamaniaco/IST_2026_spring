@@ -1,11 +1,11 @@
 import random
 import typing as tp
+from math import floor, ceil
 
 
 def is_prime(n: int) -> bool:
     """
     Tests to see if a number is prime.
-
     >>> is_prime(2)
     True
     >>> is_prime(11)
@@ -14,11 +14,17 @@ def is_prime(n: int) -> bool:
     False
     """
     if n < 2:
-      return False
-    for i in range(2, int(n**0.5)+1):
-      if n % i == 0:
         return False
+    if n == 2:
+        return True
+    if n % 2 == 0:
+        return False
+    for i in range(3, floor(n ** 0.5) + 1, 2):
+        if n % i == 0:
+            return False
     return True
+
+
 
 
 def gcd(a: int, b: int) -> int:
@@ -30,9 +36,24 @@ def gcd(a: int, b: int) -> int:
     >>> gcd(3, 7)
     1
     """
-    while b:
-      a , b = b, a % b
-    return a
+    c,d = sorted([a,b],reverse=True)
+    if d == 0:
+        return c
+    if c % d == 0:
+        return d
+    while d >= 1:
+        c,d = d, c % d
+        if c % d == 0:
+            return d
+    return 0
+
+def extended_gcd(a, b):
+    if b == 0:
+        return a, 1, 0 
+    gcd, x1, y1 = extended_gcd(b, a % b)
+    x = y1
+    y = x1 - (a // b) * y1
+    return gcd, x, y
 
 
 def multiplicative_inverse(e: int, phi: int) -> int:
@@ -43,21 +64,8 @@ def multiplicative_inverse(e: int, phi: int) -> int:
     >>> multiplicative_inverse(7, 40)
     23
     """
-    d, x1, x2 = 0, 0, 1
-    y1, y2 = 1, 0
-    original_phi = phi
-    while e > 0:
-      q = phi // e
-      r = phi % e
-      phi, e = e, r
-      x = x1 - q * x2
-      y = y1 - q * y2
-      x1, x2 = x2, x
-      y1, y2 = y2, y
-    if x1 < 0:
-      x1 += original_phi
-    return x1
-
+    gcd, x, _ = extended_gcd(e, phi)
+    return x % phi
 
 def generate_keypair(p: int, q: int) -> tp.Tuple[tp.Tuple[int, int], tp.Tuple[int, int]]:
     if not (is_prime(p) and is_prime(q)):
@@ -65,16 +73,26 @@ def generate_keypair(p: int, q: int) -> tp.Tuple[tp.Tuple[int, int], tp.Tuple[in
     elif p == q:
         raise ValueError("p and q cannot be equal")
 
-    n = p * q
-    phi = (p-1)(q-1)
+    # n = pq
+    n = p*q
 
+    # phi = (p-1)(q-1)
+    phi = (p-1)*(q-1)
+
+    # Choose an integer e such that e and phi(n) are coprime
     e = random.randrange(1, phi)
-    g = rsa.gsd(e, phi)
-    while g != 1:
-      e = random.randrange(1, phi)
-      g = rsa.gsd(e, phi)
 
-    d = rsa.multiplicative_inverse(e, phi)
+    # Use Euclid's Algorithm to verify that e and phi(n) are coprime
+    g = gcd(e, phi)
+    while g != 1:
+        e = random.randrange(1, phi)
+        g = gcd(e, phi)
+
+    # Use Extended Euclid's Algorithm to generate the private key
+    d = multiplicative_inverse(e, phi)
+
+    # Return public and private keypair
+    # Public key is (e, n) and private key is (d, n)
     return ((e, n), (d, n))
 
 
@@ -111,3 +129,5 @@ if __name__ == "__main__":
     print("Decrypting message with public key ", public, " . . .")
     print("Your message is:")
     print(decrypt(public, encrypted_msg))
+
+    

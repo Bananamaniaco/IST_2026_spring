@@ -1,4 +1,5 @@
-import caesar
+from string import ascii_lowercase, ascii_uppercase
+
 def encrypt_vigenere(plaintext: str, keyword: str) -> str:
     """
     Encrypts plaintext using a Vigenere cipher.
@@ -11,18 +12,20 @@ def encrypt_vigenere(plaintext: str, keyword: str) -> str:
     'LXFOPVEFRNHR'
     """
     ciphertext = ""
-    lower = string.ascii_lowercase
-    upper = string.ascii_uppercase
-    n = len(keyword)
-    cipher_text = list(plaintext)
-    for i in range(n):
-      if keyword[i] in lower:
-        shift = lower.find(keyword[i])
-      else:
-        shift = upper.find(keyword[i])
-      cipher_text[i::n] = caesar.encrypt_caesar(plaintext[i::n], shift)
-    cipher_text = "".join(cipher_text)
-    return cipher_text
+    c = 0
+    alphabet = ascii_lowercase
+    alphabet_upcase = ascii_uppercase
+    n = len(alphabet)
+    for character in plaintext:
+        if character in alphabet:
+            ciphertext += alphabet[(alphabet.index(character) + alphabet.index(keyword.lower()[c])) % n]
+        elif character in alphabet_upcase:
+            ciphertext += alphabet_upcase[(alphabet_upcase.index(character) + alphabet_upcase.index(keyword.upper()[c])) % n]
+        else:
+            ciphertext += character
+        c = (c + 1) % len(keyword)
+        
+    return ciphertext
 
 
 def decrypt_vigenere(ciphertext: str, keyword: str) -> str:
@@ -37,15 +40,17 @@ def decrypt_vigenere(ciphertext: str, keyword: str) -> str:
     'ATTACKATDAWN'
     """
     plaintext = ""
-    lower = string.ascii_lowercase
-    upper = string.ascii_uppercase
-    n = len(keyword)
-    plaintext = list(ciphertext)
-    for i in range(n):
-      if keyword[i] in lower:
-        shift = lower.find(keyword[i])
-      else:
-        shift = upper.find(keyword[i])
-      plaintext[i::n] = caesar.encrypt_caesar(ciphertext[i::n], -shift)
-    plaintext = "".join(plaintext)
+    c = 0
+    alphabet = ascii_lowercase
+    alphabet_upcase = ascii_uppercase
+    n = len(alphabet)
+    for character in ciphertext:
+        if character in alphabet:
+            plaintext += alphabet[(alphabet.index(character) - alphabet.index(keyword.lower()[c])) % n]
+        elif character in alphabet_upcase:
+            plaintext += alphabet_upcase[(alphabet_upcase.index(character) - alphabet_upcase.index(keyword.upper()[c])) % n]
+        else:
+            plaintext += character
+        c = (c + 1) % len(keyword)
+
     return plaintext
